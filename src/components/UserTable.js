@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Table from '../blu_components/Table';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
@@ -204,23 +204,29 @@ export default function UserTable() {
   const [order, setOrder] = useState('asc');
   const [orderByColumn, setOrderByColumn] = useState('');
 
-  const handleRoleChange = (rowData, newRole) => {
-    const newRows = rows.map((row) =>
-      row !== rowData ? row : { ...row, role: newRole }
-    );
+  const handleRoleChange = useCallback(
+    (rowData, newRole) => {
+      const newRows = rows.map((row) =>
+        row !== rowData ? row : { ...row, role: newRole }
+      );
 
-    setRows(newRows);
-  };
+      setRows(newRows);
+    },
+    [rows]
+  );
 
-  const handleStatusChange = (rowData, newSatus) => {
-    const newRows = rows.map((row) =>
-      row !== rowData
-        ? row
-        : { ...row, status: newSatus ? 'active' : 'in_active' }
-    );
+  const handleStatusChange = useCallback(
+    (rowData, newSatus) => {
+      const newRows = rows.map((row) =>
+        row !== rowData
+          ? row
+          : { ...row, status: newSatus ? 'active' : 'in_active' }
+      );
 
-    setRows(newRows);
-  };
+      setRows(newRows);
+    },
+    [rows]
+  );
 
   const columns = [
     {
@@ -315,43 +321,60 @@ export default function UserTable() {
     },
   ];
 
-  const handleSort = (column) => {
-    const sortDirection =
-      orderByColumn === column.id && order === 'asc' ? 'desc' : 'asc';
-    setOrder(sortDirection);
-    setOrderByColumn(column.id);
+  const handleSort = useCallback(
+    (column) => {
+      const sortDirection =
+        orderByColumn === column.id && order === 'asc' ? 'desc' : 'asc';
+      setOrder(sortDirection);
+      setOrderByColumn(column.id);
 
-    switch (column.id) {
-      case 'id':
-      case 'name':
-      case 'role':
-      case 'merchant':
-        setRows(orderBy(rows, [column.id], [sortDirection]));
-        break;
-      case 'status':
-        setRows(orderBy(rows, (row) => row[column.id].length, [sortDirection]));
-        break;
+      switch (column.id) {
+        case 'id':
+        case 'name':
+        case 'role':
+        case 'merchant':
+          setRows(orderBy(rows, [column.id], [sortDirection]));
+          break;
+        case 'status':
+          setRows(
+            orderBy(rows, (row) => row[column.id].length, [sortDirection])
+          );
+          break;
 
-      default:
-        break;
-    }
-  };
+        default:
+          break;
+      }
+    },
+    [orderByColumn, order, rows]
+  );
 
-  const handlePagination = (event, page) => {
+  const handlePagination = useCallback((event, page) => {
     const newData = rowData.slice((page - 1) * perPageItem, page * perPageItem);
     setRows(newData);
-  };
+  }, []);
+
+  const handleFilter = useCallback((col, opt) => {
+    console.log(col, opt);
+  }, []);
+
+  const handleRowSelect = useCallback((items) => {
+    console.log(items);
+  }, []);
+
+  const pages = useMemo(() => Math.ceil(rowData.length / perPageItem), [
+    perPageItem,
+  ]);
 
   return (
     <div className='App'>
       <Table
         data={rows}
         columns={columns}
-        onRowSelect={(items) => {}}
-        pages={Math.ceil(rowData.length / perPageItem)}
+        onRowSelect={handleRowSelect}
+        pages={pages}
         onPagination={handlePagination}
         onSort={handleSort}
-        onFilter={(col, opt) => console.log(col, opt)}
+        onFilter={handleFilter}
       />
     </div>
   );

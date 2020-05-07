@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import { makeStyles } from '@material-ui/core/styles';
@@ -59,25 +59,31 @@ function Blu_Table({
     onRowSelect && onRowSelect(selectedItems);
   }, [onRowSelect, selectedItems]);
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const newSelectedItems = [...rows];
+  const handleSelectAll = useCallback(
+    (event) => {
+      if (event.target.checked) {
+        const newSelectedItems = [...rows];
+        setSelectedItems(newSelectedItems);
+        return;
+      }
+      setSelectedItems([]);
+    },
+    [rows]
+  );
+
+  const handleRowSelect = useCallback(
+    (event, row) => {
+      let newSelectedItems;
+      if (event.target.checked) {
+        newSelectedItems = [...selectedItems, row];
+      } else {
+        newSelectedItems = selectedItems.filter((item) => item !== row);
+      }
+
       setSelectedItems(newSelectedItems);
-      return;
-    }
-    setSelectedItems([]);
-  };
-
-  const handleRowSelect = (event, row) => {
-    let newSelectedItems;
-    if (event.target.checked) {
-      newSelectedItems = [...selectedItems, row];
-    } else {
-      newSelectedItems = selectedItems.filter((item) => item !== row);
-    }
-
-    setSelectedItems(newSelectedItems);
-  };
+    },
+    [selectedItems]
+  );
 
   return (
     <Paper className={classes.root}>
